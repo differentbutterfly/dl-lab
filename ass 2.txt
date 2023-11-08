@@ -1,0 +1,58 @@
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.optimizers import SGD
+
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+# Normalize the images
+X_train = X_train / 255.0
+X_test = X_test / 255.0
+
+# Reshape the dataset into 4D array
+X_train = X_train.reshape((X_train.shape[0], 28, 28, 1))
+X_test = X_test.reshape((X_test.shape[0], 28, 28, 1))
+
+# One-hot encode the labels
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(100, activation='relu'),
+    Dense(10, activation='softmax')
+    ])
+
+model.compile(optimizer=SGD(0.01), loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=32)
+
+# Evaluate the model
+loss, accuracy = model.evaluate(X_test, y_test, verbose=1)
+
+# Print test accuracy
+print('Test accuracy:', accuracy)
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Select a random image from the test set
+index = np.random.randint(0, X_test.shape[0])
+image = X_test[index]
+
+# Display the image
+plt.imshow(image.squeeze(), cmap='gray')
+plt.show()
+
+# Reshape the image to match the model's input shape
+image = image.reshape((1, 28, 28, 1))
+
+# Predict the digit using the model
+prediction = model.predict(image)
+predicted_digit = np.argmax(prediction)
+
+print("The model predicts this digit is:", predicted_digit)
